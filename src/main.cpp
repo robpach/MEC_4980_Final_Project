@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "SparkFun_Qwiic_OLED.h"
 #include <Buzzer.h>
+#include <QuickPID.h>
 
 // Thermistor variables
 const float R = 10000.0;
@@ -11,6 +12,7 @@ float T25 = 298.0;
 float beta = 3750.0;
 float tempK, voltage, resistance, tempC, tempF;
 char disp[40];
+unsigned long prevTime = 0;
 
 // Temperature control variables
 int target = 200; // Fahrenheit
@@ -18,14 +20,34 @@ int target = 200; // Fahrenheit
 // Buzzer Pin
 const int buzzerPin = 2;
 
+// PID Initialization
+float Kp = 5, Ki = 0.0, Kd = 0.0;
+float Input, Output, Setpoint;
+QuickPID PID(&Input, &Output, &Setpoint);
+
 // Initialize general pins
 const int onButton = 4;
-const int upButton = 5;
-const int downButton = 6;
+const int upButton = 6;
+const int downButton = 5;
+const int redLED = 7;
+const int greenLED = 8;
+const int tempSignal = 9;
+bool onPressed = true;
+bool upPressed = true;
+bool downPressed = true;
+bool currentOn;
 
 // initialize objects
-Buzzer buzzer(buzzerPin);
+Buzzer buzzer(buzzerPin, 3);
 QwiicMicroOLED myOLED;
+
+enum MachineStates
+{
+  Off,
+  On
+};
+
+MachineStates currentState = Off;
 
 void setup()
 {
@@ -36,6 +58,9 @@ void setup()
   pinMode(onButton, INPUT_PULLUP);
   pinMode(upButton, INPUT_PULLUP);
   pinMode(downButton, INPUT_PULLUP);
+  pinMode(redLED, OUTPUT);
+  pinMode(greenLED, OUTPUT);
+  pinMode(tempSignal, OUTPUT);
 
   while (!myOLED.begin())
   {
@@ -52,47 +77,113 @@ void setup()
   delay(500);
   myOLED.erase();
   myOLED.display();
+
+  Input = tempF;
+  PID.SetTunings(Kp, Ki, Kd);
+  PID.SetMode(PID.Control::automatic);
+  PID.SetOutputLimits(0, 255);
 }
 
 void updateTemps()
 {
-
-}
-
-void increaseTarget()
-{
-  // pause for 200 ms, increase temp by 5 F, then buzz
-}
-
-void decreaseTarget()
-{
-  // pause for 200 ms, decrease temp by 5 F, then buzz
-}
-
-void togglePower()
-{
-  
-}
-
-void loop()
-{
-  myOLED.erase();
   reading = analogRead(sensorPin);
   voltage = float(reading / 1023) * 5;
   resistance = float(voltage * R) / float(5 - voltage);
   tempK = 1.0 / ((1.0 / T25) + 1.0 / beta * log(resistance / Rtherm));
   tempC = tempK - 273.15;
+  tempF = tempC * (9.0 / 5.0) + 32.0;
+}
+
+void displayTemps()
+{
+  myOLED.erase();
   char tempStr[10];
-  myOLED.text(0,0, "Temp:");
-  tempF = tempC*(9.0/5.0) + 32.0;
+  myOLED.text(0, 0, "Temp:");
   dtostrf(tempF, 3, 2, tempStr);
   snprintf(disp, sizeof(disp), "%s F", tempStr);
   myOLED.text(0, 10, disp);
   Serial.println(disp);
-  myOLED.text(0,25, "Target:");
+  myOLED.text(0, 25, "Target:");
   snprintf(disp, sizeof(disp), "%i F", target);
-  myOLED.text(0,35,disp);
-
+  myOLED.text(0, 35, disp);
   myOLED.display();
-  delay(1000);
+
+  // Serial.print("PWM signal: ");
+  // Serial.println(Output);
+}
+
+void loop()
+{
+  updateTemps();
+  switch (currentState)
+  {
+  case Off:
+    onPressed = currentOn;
+    analogWrite(tempSignal, 0);
+    if (tempF > 100)
+    {
+      digitalWrite(redLED, HIGH);
+    }
+    else if (tempF < 100)
+    {
+      digitalWrite(redLED, LOW);
+    }
+
+    currentOn = digitalRead(onButton);
+    if (currentOn == LOW && onPressed == HIGH)
+    {
+      digitalWrite(redLED, HIGH);
+      digitalWrite(greenLED, HIGH);
+      onPressed = currentOn;
+      buzzer.sound(NOTE_E5, 100);
+      buzzer.sound(NOTE_F5, 100);
+      buzzer.sound(NOTE_G5, 100);
+      currentState = On;
+    }
+
+    break;
+
+  case On:
+    onPressed = currentOn;
+    displayTemps();
+
+    Setpoint = target;
+    Input = tempF;
+    PID.Compute();
+    analogWrite(tempSignal, Output);
+
+    bool currentUp = digitalRead(upButton);
+    if (currentUp == LOW && upPressed == HIGH)
+    {
+      target = target + 5;
+      buzzer.sound(NOTE_G5, 50);
+    }
+    upPressed = currentUp;
+
+    bool currentDown = digitalRead(downButton);
+    if (currentDown == LOW && downPressed == HIGH)
+    {
+      target = target - 5;
+      buzzer.sound(NOTE_C5, 50);
+    }
+    downPressed = currentDown;
+
+    currentOn = digitalRead(onButton);
+    if (currentOn == LOW && onPressed == HIGH)
+    {
+      digitalWrite(redLED, LOW);
+      digitalWrite(greenLED, LOW);
+      onPressed = currentOn;
+      buzzer.sound(NOTE_G5, 100);
+      buzzer.sound(NOTE_F5, 100);
+      buzzer.sound(NOTE_E5, 100);
+      myOLED.erase();
+      myOLED.display();
+      currentState = Off;
+    }
+
+    break;
+  }
+
+  delay(50);
 }

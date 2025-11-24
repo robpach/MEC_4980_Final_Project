@@ -10,6 +10,7 @@
             "includePath": [
                 "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/include",
                 "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/src",
+                "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/.pio/libdeps/nanoatmega328/QuickPID/src",
                 "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/.pio/libdeps/nanoatmega328/Buzzer/src",
                 "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/.pio/libdeps/nanoatmega328/SparkFun Qwiic OLED Arduino Library/src",
                 "C:/Users/pachr/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
@@ -26,6 +27,7 @@
                 "path": [
                     "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/include",
                     "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/src",
+                    "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/.pio/libdeps/nanoatmega328/QuickPID/src",
                     "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/.pio/libdeps/nanoatmega328/Buzzer/src",
                     "C:/Users/pachr/OneDrive - Milwaukee School of Engineering/Documents/PlatformIO/Projects/MEC_4980_Final_Project/.pio/libdeps/nanoatmega328/SparkFun Qwiic OLED Arduino Library/src",
                     "C:/Users/pachr/.platformio/packages/framework-arduino-avr/libraries/Wire/src",
