@@ -21,15 +21,15 @@ int target = 200; // Fahrenheit
 const int buzzerPin = 2;
 
 // PID Initialization
-float Kp = 5, Ki = 0.0, Kd = 0.0;
+float Kp = 10, Ki = 0.0, Kd = 0.0;
 float Input, Output, Setpoint;
 QuickPID PID(&Input, &Output, &Setpoint);
 
 // Initialize general pins
-const int onButton = 4;
+const int onButton = 3;
 const int upButton = 6;
 const int downButton = 5;
-const int redLED = 7;
+const int redLED = 10;
 const int greenLED = 8;
 const int tempSignal = 9;
 bool onPressed = true;
@@ -38,7 +38,7 @@ bool downPressed = true;
 bool currentOn;
 
 // initialize objects
-Buzzer buzzer(buzzerPin, 3);
+Buzzer buzzer(buzzerPin);
 QwiicMicroOLED myOLED;
 
 enum MachineStates
@@ -94,6 +94,7 @@ void updateTemps()
   tempF = tempC * (9.0 / 5.0) + 32.0;
 }
 
+
 void displayTemps()
 {
   myOLED.erase();
@@ -119,15 +120,15 @@ void loop()
   {
   case Off:
     onPressed = currentOn;
-    analogWrite(tempSignal, 0);
-    if (tempF > 100)
+    if (tempF > 120)
     {
       digitalWrite(redLED, HIGH);
     }
-    else if (tempF < 100)
+    else if (tempF < 120)
     {
       digitalWrite(redLED, LOW);
     }
+    analogWrite(tempSignal, 0);
 
     currentOn = digitalRead(onButton);
     if (currentOn == LOW && onPressed == HIGH)
@@ -147,10 +148,23 @@ void loop()
     onPressed = currentOn;
     displayTemps();
 
-    Setpoint = target;
+    /*Setpoint = target;
     Input = tempF;
     PID.Compute();
-    analogWrite(tempSignal, Output);
+    if (Output < 70)
+    {
+      Output = 100;
+    }
+    analogWrite(tempSignal, Output);*/
+
+    if (tempF < target)
+    {
+      analogWrite(tempSignal, 255);
+    }
+    else if (tempF > target)
+    {
+      analogWrite(tempSignal, 0);
+    }
 
     bool currentUp = digitalRead(upButton);
     if (currentUp == LOW && upPressed == HIGH)
