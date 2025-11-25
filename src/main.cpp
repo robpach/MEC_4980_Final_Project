@@ -36,6 +36,7 @@ bool onPressed = true;
 bool upPressed = true;
 bool downPressed = true;
 bool currentOn;
+unsigned long startTime;
 
 // initialize objects
 Buzzer buzzer(buzzerPin);
@@ -145,6 +146,7 @@ void loop()
       buzzer.sound(NOTE_E5, 100);
       buzzer.sound(NOTE_F5, 100);
       buzzer.sound(NOTE_G5, 100);
+      startTime = millis();
       currentState = On;
     }
 
@@ -203,11 +205,9 @@ void loop()
       currentState = Off;
     }
 
-    break;
 
     // 1 Hour shut down (when entering the "On" State)
-    unsigned long startTime = millis();
-    if ((millis() - startTime) >= 3600000000)
+    if ((millis() - startTime) >= 3600000UL)
     {
       digitalWrite(redLED, LOW);
       digitalWrite(greenLED, LOW);
@@ -219,6 +219,8 @@ void loop()
       myOLED.display();
       currentState = Off;
     }
+
+    break;
   }
 
   delay(50);
