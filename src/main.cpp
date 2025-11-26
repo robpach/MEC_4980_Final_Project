@@ -87,6 +87,22 @@ void setup()
   PID.SetOutputLimits(0, 255);
 }
 
+void sensorFault()
+{
+  myOLED.erase();
+  myOLED.text(0, 25, "FAULT!");
+  myOLED.display();
+  analogWrite(tempSignal, 0);
+  digitalWrite(greenLED, LOW);
+  while (true)
+  {
+    digitalWrite(redLED, HIGH);
+    buzzer.sound(NOTE_G5, 500);
+    digitalWrite(redLED, LOW);
+    delay(100);
+  }
+}
+
 void updateTemps()
 {
   // calculates temperature in Kelvin, then changes to C and F
@@ -96,6 +112,12 @@ void updateTemps()
   tempK = 1.0 / ((1.0 / T25) + 1.0 / beta * log(resistance / Rtherm));
   tempC = tempK - 273.15;
   tempF = tempC * (9.0 / 5.0) + 32.0;
+
+  // Sensor Failure Check
+  if (isnan(tempF) || tempF < -40 || tempF > 400)
+  {
+    sensorFault();
+  }
 }
 
 void displayTemps()
@@ -177,16 +199,32 @@ void loop()
     bool currentUp = digitalRead(upButton);
     if (currentUp == LOW && upPressed == HIGH)
     {
-      target = target + 5;
-      buzzer.sound(NOTE_G5, 50);
+      if (target > 300)
+      {
+        target = 300;
+        buzzer.sound(NOTE_G2, 100);
+      }
+      else
+      {
+        target = target + 5;
+        buzzer.sound(NOTE_G5, 50);
+      }
     }
     upPressed = currentUp;
 
     bool currentDown = digitalRead(downButton);
     if (currentDown == LOW && downPressed == HIGH)
     {
-      target = target - 5;
-      buzzer.sound(NOTE_C5, 50);
+      if (target < 100)
+      {
+        target = 100;
+        buzzer.sound(NOTE_G2, 100);
+      }
+      else
+      {
+        target = target - 5;
+        buzzer.sound(NOTE_C5, 50);
+      }
     }
     downPressed = currentDown;
 
@@ -205,9 +243,8 @@ void loop()
       currentState = Off;
     }
 
-
     // 1 Hour shut down (when entering the "On" State)
-    if ((millis() - startTime) >= 3600000UL)
+    if ((millis() - startTime) >= 7200000UL)
     {
       digitalWrite(redLED, LOW);
       digitalWrite(greenLED, LOW);
