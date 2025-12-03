@@ -65,8 +65,11 @@ void setup()
 
   while (!myOLED.begin())
   {
+    digitalWrite(redLED,HIGH);
     Serial.println("OLED failed");
-    delay(1000);
+    delay(500);
+    digitalWrite(redLED,LOW);
+    delay(500);
   }
 
   // Manual screen clearing to get rid of the "speckles"
