@@ -65,10 +65,10 @@ void setup()
 
   while (!myOLED.begin())
   {
-    digitalWrite(redLED,HIGH);
+    digitalWrite(redLED, HIGH);
     Serial.println("OLED failed");
     delay(500);
-    digitalWrite(redLED,LOW);
+    digitalWrite(redLED, LOW);
     delay(500);
   }
 
@@ -145,6 +145,14 @@ void displayTemps()
 void loop()
 {
   updateTemps();
+  if (tempF > 120)
+  {
+    digitalWrite(redLED, HIGH);
+  }
+  else if (tempF < 120)
+  {
+    digitalWrite(redLED, LOW);
+  }
   switch (currentState)
   {
   case Off:
@@ -165,7 +173,6 @@ void loop()
     currentOn = digitalRead(onButton);
     if (currentOn == LOW && onPressed == HIGH)
     {
-      digitalWrite(redLED, HIGH);
       digitalWrite(greenLED, HIGH);
       onPressed = currentOn;
       buzzer.sound(NOTE_E5, 100);
@@ -235,7 +242,6 @@ void loop()
     currentOn = digitalRead(onButton);
     if (currentOn == LOW && onPressed == HIGH)
     {
-      digitalWrite(redLED, LOW);
       digitalWrite(greenLED, LOW);
       onPressed = currentOn;
       buzzer.sound(NOTE_G5, 100);
@@ -247,9 +253,8 @@ void loop()
     }
 
     // 1 Hour shut down (when entering the "On" State)
-    if ((millis() - startTime) >= 7200000UL)
+    if ((millis() - startTime) >= 3600000UL)
     {
-      digitalWrite(redLED, LOW);
       digitalWrite(greenLED, LOW);
       onPressed = currentOn;
       buzzer.sound(NOTE_G5, 100);
