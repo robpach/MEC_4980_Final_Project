@@ -37,6 +37,8 @@ bool upPressed = true;
 bool downPressed = true;
 bool currentOn;
 unsigned long startTime;
+unsigned long lastOLED = 0;
+unsigned long timeRemaining = 0;
 
 // initialize objects
 Buzzer buzzer(buzzerPin);
@@ -83,6 +85,12 @@ void setup()
   myOLED.erase();
   myOLED.display();
 
+  myOLED.text(0, 0, "Mug");
+  myOLED.text(0, 10, "Warmer");
+  myOLED.text(0, 30, "by Rob");
+  myOLED.display();
+  delay(1500);
+
   Input = tempF;
   PID.SetTunings(Kp, Ki, Kd);
   PID.SetMode(1);
@@ -127,19 +135,26 @@ void displayTemps()
 {
   // Prints both target temperature and actual temperature
   myOLED.erase();
+
+  // Actual Temperature
   char tempStr[10];
   myOLED.text(0, 0, "Temp:");
   dtostrf(tempF, 3, 2, tempStr);
   snprintf(disp, sizeof(disp), "%s F", tempStr);
   myOLED.text(0, 10, disp);
   Serial.println(disp);
+
+  // Target temperature
   myOLED.text(0, 25, "Target:");
   snprintf(disp, sizeof(disp), "%i F", target);
   myOLED.text(0, 35, disp);
-  myOLED.display();
 
-  // Serial.print("PWM signal: ");
-  // Serial.println(Output);
+  // Time Remaining
+  dtostrf(timeRemaining, 3, 0, tempStr);
+  snprintf(disp, sizeof(disp), "%sm", tempStr);
+  myOLED.text(40, 0, disp);
+
+  myOLED.display();
 }
 
 void loop()
@@ -156,17 +171,7 @@ void loop()
   switch (currentState)
   {
   case Off:
-
-    // Safety Feature: If the plate is still 120 F or higher, red LED is on
     onPressed = currentOn;
-    if (tempF > 120)
-    {
-      digitalWrite(redLED, HIGH);
-    }
-    else if (tempF < 120)
-    {
-      digitalWrite(redLED, LOW);
-    }
     analogWrite(tempSignal, 0);
 
     // Reading the On button to switch to the On state
@@ -182,11 +187,26 @@ void loop()
       currentState = On;
     }
 
+    if (tempF > 120)
+    {
+      myOLED.erase();
+      myOLED.text(10, 20, "Cooling...");
+      myOLED.display();
+    } else
+    {
+      myOLED.erase();
+      myOLED.display();
+    }
+
     break;
 
   case On:
     onPressed = currentOn;
-    displayTemps();
+    if (millis() - lastOLED > 250)
+    {
+      displayTemps();
+      lastOLED = millis();
+    }
 
     // Simple On/Off controll is used until the error is within 5 degrees F
     if ((target - tempF) > 5)
@@ -209,7 +229,7 @@ void loop()
     bool currentUp = digitalRead(upButton);
     if (currentUp == LOW && upPressed == HIGH)
     {
-      if (target > 300)
+      if (target >= 300)
       {
         target = 300;
         buzzer.sound(NOTE_G2, 100);
@@ -225,7 +245,7 @@ void loop()
     bool currentDown = digitalRead(downButton);
     if (currentDown == LOW && downPressed == HIGH)
     {
-      if (target < 100)
+      if (target <= 100)
       {
         target = 100;
         buzzer.sound(NOTE_G2, 100);
@@ -264,6 +284,8 @@ void loop()
       myOLED.display();
       currentState = Off;
     }
+
+    timeRemaining = (3600000UL - (millis() - startTime)) / 60000UL;
 
     break;
   }
