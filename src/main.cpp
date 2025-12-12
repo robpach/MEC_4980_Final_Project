@@ -69,6 +69,15 @@ void setup()
   Serial.begin(9600);
   delay(500);
 
+
+  /* 
+  This changes the frequency of PWM, got it from chat GPT
+  I did this because the pwm on the mosfet was creating a buzzing noise
+  Now, the pwm frequency is above human hearing range
+  So I can't hear it, but maybe my dog can?
+  */
+  TCCR1B = TCCR1B & 0b11111000 | 0x01;
+
   pinMode(onButton, INPUT_PULLUP);
   pinMode(upButton, INPUT_PULLUP);
   pinMode(downButton, INPUT_PULLUP);
