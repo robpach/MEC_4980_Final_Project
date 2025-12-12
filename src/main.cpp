@@ -278,7 +278,7 @@ void loop()
       myOLED.text(0, 10, "Cooling...");
       myOLED.setFont(&QW_FONT_8X16);
       dtostrf(tempF, 3, 0, tempStr);
-      snprintf(disp, sizeof(disp), "%s F", tempStr, target);
+      snprintf(disp, sizeof(disp), "%s F", tempStr);
       myOLED.text(12 ,30, disp);
       myOLED.setFont(&QW_FONT_5X7);
       myOLED.display();
